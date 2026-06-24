@@ -17,10 +17,30 @@ model = genai.GenerativeModel('gemini-pro')
 # إعداد معلومات مدونة بلوجر
 BLOG_ID = os.environ.get("BLOG_ID")
 
-# المصادقة مع بلوجر (نفترض أن لديك ملف token.json من مشروعك السابق)
-# سنقوم بقراءة بيانات الاعتماد للاتصال بـ Blogger API
-creds = Credentials.from_authorized_user_file('token.json')
-blogger_service = build('blogger', 'v3', credentials=creds)
+import json  # تأكد من وجود هذا الاستدعاء في أعلى الملف مع المكتبات
+
+# ========================================================
+# جزء المصادقة المعالج والمقاوم للأخطاء لـ token.json
+# ========================================================
+try:
+    with open('token.json', 'r', encoding='utf-8') as f:
+        token_data = json.load(f)
+    
+    # إذا كانت البيانات داخل قائمة مغلّفة [ ]، نأخذ القاموس الداخلي الأول { }
+    if isinstance(token_data, list):
+        if len(token_data) > 0:
+            token_data = token_data[0]
+        else:
+            raise ValueError("ملف token.json يحتوي على قائمة فارغة!")
+
+    # بناء الاعتماديات باستخدام البيانات المعالجة بشكل صحيح
+    creds = Credentials.from_authorized_user_info(token_data)
+    blogger_service = build('blogger', 'v3', credentials=creds)
+    print("تمت عملية المصادقة وقراءة صلاحيات بلوجر بنجاح! 🔓")
+
+except Exception as e:
+    print(f"خطأ حرج أثناء معالجة ملف token.json: {e}")
+    raise e
 
 # ==========================================
 # 2. إعداد مصادر الأخبار والتصنيفات
