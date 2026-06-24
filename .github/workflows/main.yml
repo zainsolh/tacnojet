@@ -1,1 +1,54 @@
+# اسم سير العمل البديل الذي سيظهر في تبويب Actions على GitHub
+name: تكنوجيت 
+# تحديد الأحداث التي تطلق تشغيل هذا السكربت تلقائياً
+on:
+  schedule:
+    # سيتم تشغيل السكربت تلقائياً كل ساعتين (2 hours)
+    # يمكنك تغيير الرقم 2 إلى 1 إذا أردت تشغيله كل ساعة
+    - cron: '0 */2 * * *'
+  
+  # هذا السطر يسمح لك بتشغيل السكربت يدوياً بنقرة زر من موقع GitHub للتجربة
+  workflow_dispatch:
 
+# العمليات والخطوات البرمجية التي سيقوم بها خادم جيتهاب الافتراضي
+jobs:
+  build_and_run:
+    # نوع نظام التشغيل الذي ستتم تهيئته سحابياً
+    runs-on: ubuntu-latest
+
+    steps:
+    # الخطوة 1: سحب الأكواد الحالية من المستودع (بما فيها ملف token.json و posted_urls.txt)
+    - name: سحب كود المشروع من المستودع
+      uses: actions/checkout@v3
+
+    # الخطوة 2: تثبيت لغة بايثون داخل الخادم الافتراضي
+    - name: تهيئة وتثبيت لغة بايثون
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    # الخطوة 3: تثبيت المكتبات البرمجية المطلوبة للسكربت (مثل feedparser و google-generativeai)
+    - name: تثبيت المكتبات البرمجية من requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # الخطوة 4: تشغيل السكربت الرئيسي وتمرير المفاتيح السرية بأمان من إعدادات جيت هاب
+    - name: تشغيل سكربت بايثون لجلب الأخبار ونشرها
+      env:
+        # هنا نربط المتغيرات البرمجية بالمفاتيح السرية التي قمت بحفظها في الـ Secrets
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        BLOG_ID: ${{ secrets.BLOG_ID }}
+      run: |
+        python main.py
+
+    # الخطوة 5: حفظ روابط الأخبار التي تم نشرها وإعادتها للمستودع لكي لا تتكرر في المرة القادمة
+    - name: حفظ وتحديث ملف الروابط المنشورة في المستودع
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add posted_urls.txt
+        # لن يقوم بالخطأ أو التوقف إذا لم تكن هناك أخبار جديدة للحفظ
+        git diff --quiet && git diff --staged --quiet || git commit -m "تحديث قائمة الأخبار المنشورة [تلقائي]"
+        git push
+        
