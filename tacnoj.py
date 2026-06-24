@@ -28,8 +28,8 @@ blogger_service = build('blogger', 'v3', credentials=creds)
 
 # قائمة بالمصادر: نضع رابط الـ RSS والتصنيف (Label) الذي سيتم النشر تحته
 FEEDS = [
-    {"url": "رابط_موقع_انجليزي_هنا/rss", "label": "تكنولوجيا عالمية"},
-    {"url": "رابط_موقع_عربي_هنا/rss", "label": "هواتف ذكية"},
+    {"url": "https://techcrunch.com/rss", "label": "تكنولوجيا عالمية"},
+    {"url": "https://aitnews.com/rss", "label": "هواتف ذكية"},
 ]
 
 # ملف لحفظ الروابط التي تم نشرها لتجنب التكرار
